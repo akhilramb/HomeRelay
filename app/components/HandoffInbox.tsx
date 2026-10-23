@@ -1,0 +1,9 @@
+'use client';
+import { ArrowRightLeft, ArrowUpRight, Check, X } from 'lucide-react';
+import type { Snapshot, Task } from '../../lib/homerelay/types';
+import { date } from '../../lib/homerelay/client';
+export default function HandoffInbox({data,busy,openTask,respond}:{data:Snapshot;busy:boolean;openTask:(task:Task)=>void;respond:(args:Record<string,unknown>,message:string)=>void}){
+ const incoming=data.handoffs.filter(h=>h.status==='pending'&&h.memberId===data.actor&&Date.parse(h.expiresAt)>Date.now());
+ if(!incoming.length)return null;
+ return <section className="inbox-panel" aria-labelledby="inbox-heading"><header><span className="inbox-symbol"><ArrowRightLeft size={21}/></span><div><span className="eyebrow">YOUR NEXT YES OR NO</span><h2 id="inbox-heading">{incoming.length===1?'Someone could use your help.':`${incoming.length} requests need your response.`}</h2><p>Ownership stays with the current member until you accept.</p></div></header><div className="inbox-items">{incoming.map(h=>{const t=data.tasks.find(t=>t.id===h.taskId);if(!t||t.status!=='open')return null;return <article className="inbox-item" key={h.id}><div><button className="inbox-task" onClick={()=>openTask(t)}>{t.title}<ArrowUpRight size={15}/></button><p>{data.members.find(m=>m.id===h.requestedBy)?.name} requested your help · due {date(t.due)}</p><small>{h.reason}</small></div><div className="button-row"><button className="secondary" disabled={busy} onClick={()=>respond({taskId:t.id,version:t.version,handoffId:h.id,response:'declined'},'Request declined. The original owner stays responsible.')}><X size={14}/>Decline</button><button className="primary" disabled={busy} onClick={()=>respond({taskId:t.id,version:t.version,handoffId:h.id,response:'accepted'},'Handoff accepted. You are now responsible.')}><Check size={14}/>Accept handoff</button></div></article>;})}</div></section>;
+}

@@ -1,12 +1,14 @@
 import { dispatch, errorResponse, identity, sameOrigin } from '../../lib/homerelay/store';
 import { tools, validateTool } from '../../lib/homerelay/tools.mjs';
+import { readJSON } from '../../lib/homerelay/validation.mjs';
 export const dynamic='force-dynamic';
 export async function POST(request:Request){
- let body:any;try{identity(request);sameOrigin(request);body=await request.json();}catch(e){return errorResponse(e);}
+ let body:any;try{identity(request);sameOrigin(request);body=await readJSON(request);}catch(e){return errorResponse(e);}
+ if(!body||typeof body!=='object'||Array.isArray(body)||body.jsonrpc!=='2.0'||typeof body.method!=='string')return Response.json({jsonrpc:'2.0',id:null,error:{code:-32600,message:'Invalid JSON-RPC request'}},{status:400});
  const respond=(result:unknown)=>Response.json({jsonrpc:'2.0',id:body.id,result});
  if(body.method?.startsWith('notifications/'))return new Response(null,{status:202});
- if(body.method==='server/discover')return respond({supportedVersions:['2026-07-28','2025-11-25'],capabilities:{tools:{}},serverInfo:{name:'HomeRelay',version:'1.0.0'}});
- if(body.method==='initialize')return respond({protocolVersion:body.params?.protocolVersion==='2025-11-25'?'2025-11-25':'2026-07-28',capabilities:{tools:{}},serverInfo:{name:'HomeRelay',version:'1.0.0'}});
+ if(body.method==='server/discover')return respond({supportedVersions:['2026-07-28','2025-11-25'],capabilities:{tools:{}},serverInfo:{name:'HomeRelay',version:'1.1.0'}});
+ if(body.method==='initialize')return respond({protocolVersion:body.params?.protocolVersion==='2025-11-25'?'2025-11-25':'2026-07-28',capabilities:{tools:{}},serverInfo:{name:'HomeRelay',version:'1.1.0'}});
  if(body.method==='ping')return respond({});
  if(body.method==='tools/list')return respond({tools});
  if(body.method==='tools/call')try{const args=validateTool(body.params?.name,body.params?.arguments||{});const result=await dispatch(request,body.params.name,args);return respond({content:[{type:'text',text:JSON.stringify(result)}],isError:false});}catch(e){return respond({content:[{type:'text',text:(e as Error).message}],isError:true});}

@@ -10,7 +10,7 @@ HomeRelay organizes household tasks and helps recover from changed plans. It sug
 
 ## How it was built
 
-React/TypeScript frontend, Vinext/Vite server routes, Cloudflare Worker runtime, and persistent D1 SQLite storage. A shared service enforces business rules for the web API and ten callable MCP tools. Atomic revision-checked household updates prevent conflicting writes. A scripted assistant reads real task data; an optional model adapter can summarize checked results.
+React/TypeScript frontend, Vinext/Vite server routes, Cloudflare Worker runtime, and persistent D1 SQLite storage. A shared service enforces business rules for the web API and eleven callable MCP tools. Atomic revision-checked household updates prevent conflicting writes. A scripted assistant reads real task data; an optional model adapter can summarize checked results.
 
 ## Demonstration
 

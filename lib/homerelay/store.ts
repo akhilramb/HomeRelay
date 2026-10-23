@@ -27,6 +27,6 @@ export async function dispatch(request:Request,command:string,args:Record<string
  result=await summarizeWithAI(args.message,result,env);
  state.messages.push({id:crypto.randomUUID(),actor:who,question:args.message,...result,at:new Date().toISOString()});state.messages=state.messages.slice(-60);
  }else result=execute(state,who,command,args);
- await save(uid,revision,state);return result;
+ if(JSON.stringify(state)!==before)await save(uid,revision,state);return result;
 }
 export function errorResponse(error:unknown){const e=error as any;return Response.json({error:e instanceof RelayError?e.message:'Something went wrong. Please retry.'},{status:e.status||500,headers:{'Cache-Control':'no-store'}});}

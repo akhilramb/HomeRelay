@@ -4,11 +4,12 @@
 
 | Command | Important arguments |
 | --- | --- |
-| create_task | title, description, owner, category, priority, due (UTC ISO) |
+| create_task | optional requestId for retry safety; title, description, owner, category, priority, due (UTC ISO) |
 | get_task / get_task_history / suggest_handoff_candidates | taskId |
 | list_tasks / get_household_availability | none |
 | update_task | taskId, version, title, description, category, priority, due |
 | request_handoff | taskId, version, memberId, optional reason |
+| withdraw_handoff | taskId, version, handoffId |
 | respond_to_handoff | taskId, version, handoffId, response: accepted or declined |
 | complete_task | taskId, version, optional note |
 | cancel_task | taskId, version |
@@ -20,3 +21,5 @@
 State mutations use backend membership/ownership checks and an optimistic household revision update. For task mutations, use the latest task `version` from the snapshot. On 409, refresh before retrying. The same-origin browser API does not enable CORS.
 
 `GET /api/health` checks the DB binding with SELECT 1 and returns status/database connection state; it does not expose records.
+
+A creation request ID is scoped to its creator. Repeating the identical create payload with that ID returns the existing task without another creation event. Reusing it with different details returns 409. Invalid envelopes and JSON produce 400 errors; bodies over 20 KB return 413. An edited task withdraws any pending invitation so a fresh request can be reviewed.

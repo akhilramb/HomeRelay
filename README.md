@@ -8,15 +8,20 @@ Independent simulated Alexa+ experience for the Amazon Build, Ship, Shape hackat
 
 ![HomeRelay dashboard](docs/dashboard-preview.jpg)
 
+![Incoming handoff inbox](docs/inbox-preview.jpg)
+
 ## What works
 
 - Persistent task creation, editing, cancellation, and member-confirmed completion.
 - Candidate ranking from entered availability, category preference, open workload, and previous declines.
 - Explicit request → accept/decline → completion with a responsibility timeline.
+- Incoming handoff inbox with direct accept/decline controls and a request counter.
+- Withdraw requests; editing task details withdraws pending invitations so recipients cannot accept old instructions.
+- Retry-safe task creation with idempotency keys, and automatic refresh while browsing.
 - Server checks for permissions, expiry, stale versions, duplicate completion, and changed availability.
 - Dashboard, searchable task list/board, filters, assistant, household availability, activity, theme settings, and confirmed demo reset.
 - Three labelled demo roles: Akhil, Priya, Ravi.
-- Ten MCP tools using the same business logic as the web API.
+- Eleven MCP tools using the same business logic as the web API.
 - Callable connection diagnostics at `/diagnostics`.
 - Stored assistant conversations and real task links. Scripted intent handling works without a paid model.
 
@@ -85,7 +90,7 @@ Optional: configure server-only `AI_API_KEY`, `AI_BASE_URL`, and `AI_MODEL` usin
 
 Endpoint: `POST /mcp`. Supports stateless JSON-RPC discovery, initialization for 2025-11-25 and 2026-07-28, tool listing, tool calls, ping, and notifications. The Sites integration also discovers tools with `server/discover`.
 
-Tools: `list_tasks`, `get_task`, `create_task`, `update_task`, `get_household_availability`, `suggest_handoff_candidates`, `request_handoff`, `respond_to_handoff`, `complete_task`, `get_task_history`.
+Tools: `list_tasks`, `get_task`, `create_task`, `update_task`, `get_household_availability`, `suggest_handoff_candidates`, `request_handoff`, `withdraw_handoff`, `respond_to_handoff`, `complete_task`, `get_task_history`.
 
 The server uses a small direct protocol handler rather than an MCP SDK. Discovery, initialization, and actual tool execution were tested; a full external-client conformance suite has not been run. See [MCP details](docs/mcp.md).
 
@@ -94,6 +99,8 @@ The server uses a small direct protocol handler rather than an MCP SDK. Discover
 | Feature | Files |
 | --- | --- |
 | App screens and navigation | `app/page.tsx` |
+| Incoming handoff inbox | `app/components/HandoffInbox.tsx` |
+| Input validation | `lib/homerelay/validation.mjs` |
 | Editable task form | `app/components/TaskForm.tsx` |
 | Original vector illustration | `app/components/HouseArt.tsx` |
 | Design tokens and responsive styles | `app/globals.css` |

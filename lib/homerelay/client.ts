@@ -1,5 +1,5 @@
 export async function request(command?:string,args:Record<string,unknown>={}){
- const response=await fetch('/api/relay',command?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command,args})}:{cache:'no-store'});
+ let response:Response;try{response=await fetch('/api/relay',command?{method:'POST',signal:AbortSignal.timeout(20000),headers:{'Content-Type':'application/json'},body:JSON.stringify({command,args})}:{cache:'no-store',signal:AbortSignal.timeout(15000)});}catch{throw new Error(command?'Connection interrupted. Refresh to check whether your action was saved before trying again.':'Could not reconnect. Check your connection and try again.');}
  let data:any;try{data=await response.json();}catch{throw new Error('The server is unavailable. Please try again.');}
  if(!response.ok)throw new Error(data.error||'Could not complete this action');return command?data.result:data;
 }
