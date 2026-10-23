@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+const origin=process.env.TEST_ORIGIN||'http://localhost:5173';
+async function api(command,args={},cookie='',uid='test-http'){const r=await fetch(origin+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json','oai-authenticated-user-id':uid,cookie},body:JSON.stringify({command,args})});return {status:r.status,data:await r.json()};}
+async function snapshot(uid='test-http'){const r=await fetch(origin+'/api/relay',{headers:{'oai-authenticated-user-id':uid}});assert.equal(r.status,200);return r.json();}
+async function mcp(method,params={},cookie=''){const r=await fetch(origin+'/mcp',{method:'POST',headers:{'Content-Type':'application/json','oai-authenticated-user-id':'test-http',cookie},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});return r.json();}
+test('HTTP: create → request → accept → complete → history and durable reload',async()=>{
+ await api('reset',{confirm:true});let s=await snapshot();const c=await api('create_task',{title:'HTTP parcel',owner:'akhil',category:'Deliveries',priority:'normal',description:'Integration test',due:new Date(Date.now()+3600000).toISOString()});assert.equal(c.status,200);let t=c.data.result;
+ const h=await api('request_handoff',{taskId:t.id,version:t.version,memberId:'priya'});assert.equal(h.status,200);
+ s=await snapshot();t=s.tasks.find(x=>x.id===t.id);assert.equal(t.owner,'akhil');
+ const a=await api('respond_to_handoff',{taskId:t.id,version:t.version,handoffId:h.data.result.id,response:'accepted'},'relay_member=priya');assert.equal(a.status,200);t=a.data.result;assert.equal(t.owner,'priya');
+ const done=await api('complete_task',{taskId:t.id,version:t.version,note:'Collected from reception'},'relay_member=priya');assert.equal(done.status,200);
+ s=await snapshot();assert.equal(s.tasks.find(x=>x.id===t.id).status,'completed');assert(s.events.some(e=>e.taskId===t.id&&e.type==='completed'));assert.equal((await api('complete_task',{taskId:t.id,version:done.data.result.version},'relay_member=priya')).status,409);
+});
+test('HTTP isolates authenticated households',async()=>{const a=await snapshot('house-a'),b=await snapshot('house-b');assert.notEqual(a.tasks[0].id,b.tasks[0].id);assert.equal((await api('get_task',{taskId:a.tasks[0].id},'','house-b')).status,404);});
+test('MCP discovery and real tool call roundtrip',async()=>{const init=await mcp('initialize',{protocolVersion:'2025-11-25'});assert.equal(init.result.protocolVersion,'2025-11-25');const list=await mcp('tools/list');assert.equal(list.result.tools.length,10);const result=await mcp('tools/call',{name:'list_tasks',arguments:{}});assert.equal(result.result.isError,false);const tasks=JSON.parse(result.result.content[0].text);assert(tasks.some(t=>t.title==='HTTP parcel'));const bad=await mcp('tools/call',{name:'get_task',arguments:{taskId:'bad',actor:'ravi'}});assert.equal(bad.result.isError,true);});
+test('HTTP rejects cross-origin writes',async()=>{const r=await fetch(origin+'/api/relay',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://elsewhere.example'},body:JSON.stringify({command:'reset',args:{confirm:true}})});assert.equal(r.status,403);});

@@ -1,0 +1,4 @@
+# Optional local Worker secrets; copy to .dev.vars and supply your provider credentials.
+AI_BASE_URL="https://your-openai-compatible-provider.example/v1"
+AI_MODEL="your-model-name"
+AI_API_KEY=""
