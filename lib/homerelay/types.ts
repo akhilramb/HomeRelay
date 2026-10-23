@@ -3,5 +3,5 @@ export type Task={id:string;title:string;description:string;category:string;prio
 export type Handoff={id:string;taskId:string;memberId:string;requestedBy:string;status:string;reason:string;expiresAt:string;createdAt:string};
 export type Activity={id:string;actor:string;taskId:string|null;type:string;detail:string;at:string};
 export type Suggestion={memberId:string;name:string;reason:string;workload:number;window:{start:string;end:string}};
-export type Message={id:string;actor:string;question:string;text:string;trace:string[];taskIds:string[];candidates?:Suggestion[];at:string;mode?:string};
-export type Snapshot={name:string;timezone:string;actor:string;members:Member[];tasks:Task[];handoffs:Handoff[];events:Activity[];messages:Message[];assistantMode:string};
+export type Message={id:string;actor:string;question:string;text:string;trace:string[];taskIds:string[];candidates?:Suggestion[];at:string;mode?:string;clarify?:boolean;proposal?:{command:string;args:Record<string,unknown>;label:string;status:string}};
+export type Snapshot={name:string;timezone:string;actor:string;members:Member[];tasks:Task[];handoffs:Handoff[];events:Activity[];messages:Message[];assistantMode:string;mode:'demo'|'shared';hasHousehold:boolean;ownerId?:string;insights:{risks:{taskId:string;title:string;level:string;reason:string;candidateCount:number}[];metrics:{completed:number;onTime:number;acceptedHandoffs:number;completedAfterHandoff:number};workload:{memberId:string;name:string;open:number;completed:number}[]}};

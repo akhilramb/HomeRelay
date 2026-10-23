@@ -23,3 +23,10 @@ State mutations use backend membership/ownership checks and an optimistic househ
 `GET /api/health` checks the DB binding with SELECT 1 and returns status/database connection state; it does not expose records.
 
 A creation request ID is scoped to its creator. Repeating the identical create payload with that ID returns the existing task without another creation event. Reusing it with different details returns 409. Invalid envelopes and JSON produce 400 errors; bodies over 20 KB return 413. An edited task withdraws any pending invitation so a fresh request can be reviewed.
+
+## Shared households and assistant actions
+All routes require the signed-in Sites identity in production. `create_household {name,displayName}` creates one shared home; `join_household {code,displayName}` consumes an unexpired one-use code. `invite_member {}` and `revoke_invite {}` require the household creator. `switch_space {mode:"demo"|"shared"}` selects an existing space with an HTTP-only cookie. Shared actors always come from membership rows; `switch_member` is rejected in shared mode.
+
+`assistant {message,taskId?}` returns a grounded read result or action preview. An ambiguous task can be selected by resending the message with its task ID. `confirm_assistant {messageId}` executes the stored preview after revalidation. `dismiss_assistant {messageId}` dismisses it. Callers cannot provide an arbitrary command to confirmation. Previews expire after ten minutes and execute once.
+
+`set_preferences {preferences:string[]}` edits only the active member's preferences. `snapshot` adds `mode`, `hasHousehold`, `ownerId` for shared homes, and derived `insights`.

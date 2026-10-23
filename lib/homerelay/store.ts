@@ -1,6 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { seed, expire, execute, demoAssistant, RelayError } from './service.mjs';
-import { summarizeWithAI } from './ai.mjs';
+import {planAssistant,confirmProposal} from './assistant.mjs';
+import {membership,createHousehold,joinHousehold,inviteMember,revokeInvite} from './households.mjs';
+import {insights} from './insights.mjs';
 export function identity(request:Request) {
  const uid=request.headers.get('oai-authenticated-user-id');
  if(uid)return uid;
@@ -17,16 +19,27 @@ export async function load(uid:string){
  return {revision:row.revision,state:JSON.parse(row.data)};
 }
 export async function save(uid:string,revision:number,state:unknown){const r=await env.DB!.prepare('UPDATE households SET data = ?, revision = revision + 1 WHERE id = ? AND revision = ?').bind(JSON.stringify(state),uid,revision).run();if(r.meta.changes!==1)throw new RelayError('Another action updated this household. Refresh and try again.',409);}
+export async function context(request:Request){
+ const uid=identity(request);const link=await membership(env.DB!,uid);
+ const demo=(request.headers.get('cookie')||'').includes('relay_space=demo');
+ const shared=!!link&&!demo;return {uid,key:shared?link.household_id:uid,who:shared?link.member_id:actor(request),shared,hasHousehold:!!link};
+}
 export async function dispatch(request:Request,command:string,args:Record<string,any>={}){
- const uid=identity(request),who=actor(request);const {revision,state}=await load(uid);const before=JSON.stringify(state);expire(state);
+ const uid=identity(request);
+ if(command==='create_household')return createHousehold(env.DB!,uid,args);
+ if(command==='join_household')return joinHousehold(env.DB!,uid,args);
+ if(command==='invite_member')return inviteMember(env.DB!,uid);
+ if(command==='revoke_invite')return revokeInvite(env.DB!,uid);
+ const ctx=await context(request),who=ctx.who;const {revision,state}=await load(ctx.key);const before=JSON.stringify(state);expire(state);
  let result;
- if(command==='snapshot'){if(JSON.stringify(state)!==before)await save(uid,revision,state);return {...state,actor:who,assistantMode:(env as any).AI_API_KEY&&(env as any).AI_BASE_URL&&(env as any).AI_MODEL?'live':'demo',revision};}
- if(command==='reset'){if(args.confirm!==true)throw new RelayError('Confirm the demo reset');const fresh=seed();await save(uid,revision,fresh);return {reset:true};}
+ if(command==='snapshot'){if(JSON.stringify(state)!==before)await save(ctx.key,revision,state);return {...state,actor:who,mode:ctx.shared?'shared':'demo',hasHousehold:ctx.hasHousehold,assistantMode:(env as any).AI_API_KEY&&(env as any).AI_BASE_URL&&(env as any).AI_MODEL?'live':'guided',insights:insights(state,who),revision};}
+ if(command==='reset'){if(ctx.shared)throw new RelayError('Shared households cannot be reset as demos.',403);if(args.confirm!==true)throw new RelayError('Confirm the demo reset');await save(ctx.key,revision,seed());return {reset:true};}
  if(command==='assistant'){
- result=demoAssistant(state,who,args.message);
- result=await summarizeWithAI(args.message,result,env);
+ result=await planAssistant(state,who,args.message,{taskId:args.taskId,config:env});
  state.messages.push({id:crypto.randomUUID(),actor:who,question:args.message,...result,at:new Date().toISOString()});state.messages=state.messages.slice(-60);
- }else result=execute(state,who,command,args);
- if(JSON.stringify(state)!==before)await save(uid,revision,state);return result;
+ }else if(command==='confirm_assistant')result=confirmProposal(state,who,args.messageId);
+ else if(command==='dismiss_assistant'){const m=state.messages.find((m:any)=>m.id===args.messageId&&m.actor===who);if(!m?.proposal||m.proposal.status!=='pending')throw new RelayError('No pending action found.',404);m.proposal.status='dismissed';result={dismissed:true};}
+ else result=execute(state,who,command,args);
+ if(JSON.stringify(state)!==before)await save(ctx.key,revision,state);return result;
 }
 export function errorResponse(error:unknown){const e=error as any;return Response.json({error:e instanceof RelayError?e.message:'Something went wrong. Please retry.'},{status:e.status||500,headers:{'Cache-Control':'no-store'}});}

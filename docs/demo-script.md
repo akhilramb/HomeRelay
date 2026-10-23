@@ -1,17 +1,26 @@
-# Demo script (about 2 minutes 30 seconds)
+# HomeRelay: 2-minute-40-second demo script
 
-0:00–0:20: “Household plans fail quietly. When I cannot collect a parcel, a reminder does not tell me who has actually accepted responsibility. HomeRelay makes the handoff explicit.”
+Use actual screen recording and your own English narration. Keep the final video under three minutes. Never claim a real Alexa device connection or a live in-app model if neither is configured.
 
-0:20–0:40: Show Overview. View as Akhil. Ask the scripted assistant “I cannot collect the parcel.” Show the tool-result trace and task card; explain that no request has been sent.
+## 0:00–0:20 — Problem and difference
+“Reminders tell us something is due. They don't tell us whether someone has really agreed to take over. HomeRelay keeps responsibility explicit when household plans change.” Show the dashboard and recovery desk.
 
-0:40–1:05: Open Collect the parcel. Find a helping hand. Show Priya's entered availability, preference, and workload. Send the explicit request. Point to Akhil still being the responsible member.
+## 0:20–0:45 — Ask and review
+In demo mode, view as Akhil. Use an open, future-due task owned by Akhil; create one first if necessary. In Assistant say “I cannot collect the parcel”. Show the candidate's availability and workload explanation. Explain: “This is a guided simulation using live household data. It has only prepared an action; no request was sent yet.”
 
-1:05–1:30: Close details, switch the clearly labelled demo role to Priya, reopen the task, and accept. Show ownership change. Add a short completion note and mark completed.
+## 0:45–1:05 — Confirm the request
+Click Confirm action. Open task details. “The request is saved, but Akhil still owns the task until Priya accepts.” Show the waiting state and timeline.
 
-1:30–1:50: Show the four steps in the responsibility timeline and refresh to prove persistence.
+## 1:05–1:30 — Accept and finish
+Switch the clearly labelled demo role to Priya. Accept from the inbox. Show the changed owner. Add a completion note and mark complete. “The timeline records the request, acceptance, and completion. Refreshing preserves the result.”
 
-1:50–2:10: Open /diagnostics and run the read-only MCP connection checks. Mention the shared backend rules behind browser and MCP operations.
+## 1:30–1:55 — Real members
+Open Household and show the create/join interface. If you have created a shared household, show Signed in as and the disabled role switcher. “In shared mode, each person signs in separately. One-use codes connect accounts to the same household; demo role switching cannot impersonate a real member.” Do not display a live invitation code in the public recording.
 
-2:10–2:30: “If nobody can help, the task stays unresolved. We never invent availability or count a suggestion as completion. This is an independent simulated Alexa+ experience with scripted intent handling by default. Next we would add production invitations and real notifications.”
+## 1:55–2:15 — Recovery and reminders
+Show recovery suggestions, actual outcome counters, and workload. Show Settings → Export my deadlines. “These are recorded counts, not invented productivity savings. Calendar export is a snapshot; browser alerts work while the app stays open.”
 
-Use your own voice, actual running app footage, and no unlicensed music. Record a public video shorter than three minutes; no video has been recorded or submitted automatically.
+## 2:15–2:40 — Architecture and scope
+“Eleven MCP tools and the web app share server-side rules. Confirmations are checked again for permission, stale versions, and availability. Our automated tests cover state transitions, invitations, and assistant safeguards. This is an independent simulated Alexa+ experience; optional live model planning needs provider configuration.” Briefly show diagnostics and the GitHub repo.
+
+Remaining user actions: record footage, upload publicly to YouTube/Vimeo, add genuine developer-tool feedback, and submit through Devpost. No video or hackathon entry has been uploaded automatically.
